@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "multicloud-file-system"
+version = "0.1.0"
+description = ""
+authors = ["Wojciech Przybytek <wprzybytek@student.agh.edu.pl>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fuse-python = "^1.0.7"
+redis = "^5.0.4"
+cython = "^3.0.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
