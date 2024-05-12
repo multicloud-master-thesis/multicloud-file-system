@@ -1,1 +1,1 @@
-ddd
+Content of d.txt file.

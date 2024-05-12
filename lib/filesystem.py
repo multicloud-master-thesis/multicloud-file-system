@@ -45,7 +45,7 @@ class HelloFS(Fuse):
         else:
             st.st_mode = stat.S_IFREG | 0o444
             st.st_nlink = 1
-            st.st_size = len(hello_str)
+            st.st_size = 1024
         return st
 
     def readdir(self, path, offset):
@@ -117,6 +117,8 @@ class HelloFS(Fuse):
                 except OSError as e:
                     print(f"Error: {e}")
                     return -errno.ENOENT
+
+        return -errno.ENOENT
 
 
 def main():

@@ -1,1 +1,1 @@
-aaa
+Content of a.txt file.
