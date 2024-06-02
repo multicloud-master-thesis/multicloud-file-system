@@ -11,6 +11,10 @@ fuse-python = "^1.0.7"
 redis = "^5.0.4"
 cython = "^3.0.10"
 
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+isort = "^5.13.2"
+
 
 [build-system]
 requires = ["poetry-core"]
