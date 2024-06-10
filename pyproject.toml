@@ -8,8 +8,9 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 fuse-python = "^1.0.7"
-redis = "^5.0.4"
-cython = "^3.0.10"
+python-dotenv = "^1.0.1"
+grpcio = "^1.64.1"
+grpcio-tools = "^1.64.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"

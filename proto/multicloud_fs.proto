@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package multi_cloud_fs;
+
+service Operations {
+  rpc Exists (ExistsRequest) returns (ExistsResponse) {}
+  rpc GetAttr (GetAttrRequest) returns (GetAttrResponse) {}
+  rpc ReadDir (ReadDirRequest) returns (ReadDirResponse) {}
+  rpc Read (ReadRequest) returns (ReadResponse) {}
+}
+
+message ExistsRequest {
+    string path = 1;
+}
+
+message ExistsResponse {
+  bool exists = 1;
+}
+
+message GetAttrRequest {
+    string path = 1;
+}
+
+message GetAttrResponse {
+  int64 st_mode = 1;
+  int64 st_ino = 2;
+  int64 st_dev = 3;
+  int64 st_nlink = 4;
+  int64 st_uid = 5;
+  int64 st_gid = 6;
+  int64 st_size = 7;
+  float st_atime = 8;
+  float st_mtime = 9;
+  float st_ctime = 10;
+}
+
+message ReadDirRequest {
+    string path = 1;
+    int64 offset = 2;
+}
+
+message ReadDirResponse {
+    repeated string entries = 1;
+}
+
+message ReadRequest {
+    string path = 1;
+    int64 offset = 2;
+    int64 size = 3;
+}
+
+message ReadResponse {
+    bytes data = 1;
+}
