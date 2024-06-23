@@ -13,13 +13,14 @@ from multicloud_fs_pb2_grpc import OperationsStub
 
 
 class GrpcClient:
-    def __init__(self, address: str):
+    def __init__(self, address: str, timeout: int = 1):
         self.channel = grpc.insecure_channel(address)
         self.stub = OperationsStub(self.channel)
+        self.timeout = timeout
 
     def exists(self, path: str) -> bool:
         try:
-            response = self.stub.Exists(ExistsRequest(path=path), timeout=3)
+            response = self.stub.Exists(ExistsRequest(path=path), timeout=self.timeout)
             return response.exists
         except grpc.RpcError as e:
             logging.warning("gRPC exists method error: %s", e.details())
@@ -27,7 +28,9 @@ class GrpcClient:
 
     def getattr(self, path: str) -> GetAttrResponse:
         try:
-            response = self.stub.GetAttr(GetAttrRequest(path=path), timeout=3)
+            response = self.stub.GetAttr(
+                GetAttrRequest(path=path), timeout=self.timeout
+            )
             return response
         except grpc.RpcError as e:
             logging.warning("gRPC getattr method error: %s", e.details())
@@ -36,7 +39,7 @@ class GrpcClient:
     def readdir(self, path: str, offset: int) -> list[str]:
         try:
             response = self.stub.ReadDir(
-                ReadDirRequest(path=path, offset=offset), timeout=3
+                ReadDirRequest(path=path, offset=offset), timeout=self.timeout
             )
             return response.entries
         except grpc.RpcError as e:
@@ -46,7 +49,7 @@ class GrpcClient:
     def read(self, path: str, size: int, offset: int) -> bytes:
         try:
             response = self.stub.Read(
-                ReadRequest(path=path, size=size, offset=offset), timeout=3
+                ReadRequest(path=path, size=size, offset=offset), timeout=self.timeout
             )
             return response.data
         except grpc.RpcError as e:

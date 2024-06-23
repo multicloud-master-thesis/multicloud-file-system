@@ -3,30 +3,37 @@ import os
 
 import fuse
 
-from src.grpc_client import GrpcClient
+from grpc_client_manager import GrpcClientManager
 
 
 class MultiCloudFS(fuse.Fuse):
-    def __init__(self, root_path: str, client: GrpcClient, *args, **kwargs):
+    def __init__(self, root_path: str, client: GrpcClientManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.root_path = root_path
         self.client = client
+        self.client.initialize_files(self.get_files())
+
+    def get_files(self):
+        def list_files(directory):
+            for dirpath, _, filenames in os.walk(directory):
+                for filename in filenames:
+                    yield os.path.join(dirpath, filename)
+        files = list(list_files(self.root_path))
+        files = list(map(lambda file: file.replace(self.root_path, ""), files))
+        return files
 
     def getattr(self, path: str):
         if os.path.exists(self.root_path + path):
             return os.lstat(self.root_path + path)
 
-        if self.client.exists(path):
-            return self.client.getattr(path)
-
-        return -errno.ENOENT
+        response = self.client.getattr(path)
+        return response if response else -errno.ENOENT
 
     def readdir(self, path: str, offset: int):
         entries = []
         if os.path.exists(self.root_path + path):
             entries += os.listdir(self.root_path + path)
-        if self.client.exists(path):
-            entries += self.client.readdir(path, offset)
+        entries += self.client.readdir(path, offset)
 
         entries = list(set(entries))
         for e in entries:
@@ -38,16 +45,17 @@ class MultiCloudFS(fuse.Fuse):
             f.seek(offset)
             return f.read(size).encode()
 
-        if self.client.exists(path):
-            return self.client.read(path, size, offset)
-
-        return -errno.ENOENT
+        response = self.client.read(path, size, offset)
+        return response if response else -errno.ENOENT
 
     def mkdir(self, path, mode):
-        return os.mkdir(self.root_path + path, mode)
+        os.mkdir(self.root_path + path, mode)
+        self.client.create(path)
 
     def create(self, path, flags, *mode):
-        return os.open(self.root_path + path, flags, *mode)
+        fd = os.open(self.root_path + path, flags, *mode)
+        self.client.create(path)
+        return fd
 
     def write(self, path, buf, offset):
         f = open(self.root_path + path, "w")

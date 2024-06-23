@@ -1,6 +1,5 @@
 [tool.poetry]
 name = "multicloud-file-system"
-package-mode = false
 version = "0.1.0"
 description = ""
 authors = ["Wojciech Przybytek <wprzybytek@student.agh.edu.pl>"]
@@ -11,7 +10,8 @@ python = "^3.11"
 python-dotenv = "^1.0.1"
 grpcio = "^1.64.1"
 grpcio-tools = "^1.64.1"
-fuse-python = "^1.0.8"
+fuse-python = "1.0.7"
+redis = "^5.0.6"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
