@@ -4,3 +4,35 @@ services:
     image: redis:latest
     ports:
       - "6379:6379"
+
+  cloud-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - PORT=5000
+      - ROOT_PATH=/tmp/rootpath
+      - MOUNT_PATH=/tmp/example
+    volumes:
+      - .:/app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+
+  cloud-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - PORT=5001
+      - ROOT_PATH=/tmp/rootpath
+      - MOUNT_PATH=/tmp/example
+    volumes:
+      - .:/app
+    ports:
+      - "5001:5001"
+    depends_on:
+      - redis

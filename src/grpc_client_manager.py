@@ -1,5 +1,5 @@
 from redis_client import RedisClient
-from src.grpc_client import GrpcClient
+from grpc_client import GrpcClient
 
 
 class GrpcClientManager:

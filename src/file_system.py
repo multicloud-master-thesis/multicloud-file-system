@@ -11,13 +11,14 @@ class MultiCloudFS(fuse.Fuse):
         super().__init__(*args, **kwargs)
         self.root_path = root_path
         self.client = client
-        self.client.initialize_files(self.get_files())
 
     def get_files(self):
         def list_files(directory):
-            for dirpath, _, filenames in os.walk(directory):
+            for dirpath, dirnames, filenames in os.walk(directory):
                 for filename in filenames:
                     yield os.path.join(dirpath, filename)
+                for dirname in dirnames:
+                    yield os.path.join(dirpath, dirname)
         files = list(list_files(self.root_path))
         files = list(map(lambda file: file.replace(self.root_path, ""), files))
         return files
