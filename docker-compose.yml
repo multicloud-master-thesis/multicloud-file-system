@@ -4,35 +4,41 @@ services:
     image: redis:latest
     ports:
       - "6379:6379"
+    networks:
+      - cloud-network
 
   cloud-1:
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      - REDIS_URL=redis://redis:6379
-      - PORT=5000
-      - ROOT_PATH=/tmp/rootpath
-      - MOUNT_PATH=/tmp/example
-    volumes:
-      - .:/app
-    ports:
-      - "5000:5000"
+      - HOST_URL=cloud-1
+    command: [ "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5000", "-u", "redis://redis:6379" ]
     depends_on:
       - redis
+    networks:
+      - cloud-network
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
 
   cloud-2:
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      - REDIS_URL=redis://redis:6379
-      - PORT=5001
-      - ROOT_PATH=/tmp/rootpath
-      - MOUNT_PATH=/tmp/example
-    volumes:
-      - .:/app
-    ports:
-      - "5001:5001"
+      - HOST_URL=cloud-2
+    command: [ "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5001", "-u", "redis://redis:6379" ]
     depends_on:
       - redis
+    networks:
+      - cloud-network
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+
+networks:
+  cloud-network:
+    driver: bridge

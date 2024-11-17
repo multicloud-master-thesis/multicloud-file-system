@@ -50,9 +50,9 @@ class GrpcServer(Operations):
         path = request.path
         size = request.size
         offset = request.offset
-        f = open(self.root_path + path, "r")
-        f.seek(offset)
-        data = f.read(size).encode()
+        with open(self.root_path + path, "rb") as f:
+            f.seek(offset)
+            data = f.read(size)
         return ReadResponse(data=data)
 
 

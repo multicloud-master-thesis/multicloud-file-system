@@ -3,11 +3,12 @@ FROM python:3.11
 
 # Install system packages
 RUN apt-get update && apt-get install -y \
-    libfuse2 \
-    fuse \
-    libfuse-dev
+    fuse3 \
+    libfuse3-dev \
+    libfuse-dev \
+    fuse-overlayfs
 
-RUN mkdir /tmp/example
+RUN mkdir /mnt/multicloud-fs
 RUN mkdir /tmp/rootpath
 
 # Install Poetry
@@ -19,8 +20,11 @@ WORKDIR /app
 # Copy project files into the Docker image
 COPY . /app
 
+# Set execute permission for the main script
+RUN chmod +x /app/src/main.py
+
 # Install project dependencies
 RUN poetry install
 
 # Run the project
-ENTRYPOINT $(which python) /app/src/main.py -f "/tmp/example"
+ENTRYPOINT ["poetry", "run", "python", "/app/src/main.py"]

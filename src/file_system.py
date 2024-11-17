@@ -19,6 +19,7 @@ class MultiCloudFS(fuse.Fuse):
                     yield os.path.join(dirpath, filename)
                 for dirname in dirnames:
                     yield os.path.join(dirpath, dirname)
+
         files = list(list_files(self.root_path))
         files = list(map(lambda file: file.replace(self.root_path, ""), files))
         return files
@@ -42,9 +43,9 @@ class MultiCloudFS(fuse.Fuse):
 
     def read(self, path: str, size: int, offset: int):
         if os.path.exists(self.root_path + path):
-            f = open(self.root_path + path, "r")
-            f.seek(offset)
-            return f.read(size).encode()
+            with open(self.root_path + path, "rb") as f:
+                f.seek(offset)
+                return f.read(size)
 
         response = self.client.read(path, size, offset)
         return response if response else -errno.ENOENT
