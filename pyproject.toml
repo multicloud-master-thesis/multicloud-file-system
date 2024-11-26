@@ -12,6 +12,8 @@ grpcio = "^1.64.1"
 grpcio-tools = "^1.64.1"
 fuse-python = "1.0.7"
 redis = "^5.0.6"
+cython = "^3.0.11"
+cloudpickle = "^3.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
@@ -21,5 +23,5 @@ isort = "^5.13.2"
 profile = "black"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core", "cython"]
 build-backend = "poetry.core.masonry.api"

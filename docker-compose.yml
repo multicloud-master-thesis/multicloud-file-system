@@ -13,7 +13,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - HOST_URL=cloud-1
-    command: [ "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5000", "-u", "redis://redis:6379" ]
+    command: [ "poetry", "run", "python", "/app/src/entrypoint.pyx", "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5000", "-u", "redis://redis:6379" ]
     depends_on:
       - redis
     networks:
@@ -29,7 +29,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - HOST_URL=cloud-2
-    command: [ "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5001", "-u", "redis://redis:6379" ]
+    command: [ "poetry", "run", "python", "/app/src/entrypoint.pyx", "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5001", "-u", "redis://redis:6379" ]
     depends_on:
       - redis
     networks:

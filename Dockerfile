@@ -21,10 +21,7 @@ WORKDIR /app
 COPY . /app
 
 # Set execute permission for the main script
-RUN chmod +x /app/src/main.py
+RUN chmod +x /app/src/entrypoint.pyx
 
 # Install project dependencies
 RUN poetry install
-
-# Run the project
-ENTRYPOINT ["poetry", "run", "python", "/app/src/main.py"]

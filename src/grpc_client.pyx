@@ -36,7 +36,7 @@ class GrpcClient:
             logging.warning("gRPC getattr method error: %s", e.details())
             return GetAttrResponse()
 
-    def readdir(self, path: str, offset: int) -> list[str]:
+    def readdir(self, path: str, offset: int):
         try:
             response = self.stub.ReadDir(
                 ReadDirRequest(path=path, offset=offset), timeout=self.timeout

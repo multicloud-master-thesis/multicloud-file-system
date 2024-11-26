@@ -41,7 +41,7 @@ REDIS_URL={url for redis};PORT={port for this fs};ROOT_PATH={path to the root di
 Run the file system:
 
 ```bash
-poetry run python src.main.py -d -s -f {mount_point}
+poetry run python src.entrypoint.pyx -d -s -f {mount_point}
 ```
 
 ## Architecture

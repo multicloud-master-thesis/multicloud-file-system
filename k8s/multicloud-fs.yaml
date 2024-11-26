@@ -1,0 +1,218 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fuse-device-plugin-daemonset
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: fuse-device-plugin-ds
+  template:
+    metadata:
+      labels:
+        name: fuse-device-plugin-ds
+    spec:
+      hostNetwork: true
+      containers:
+      - image: quay.io/nextflow/k8s-fuse-plugin:0.1
+        args:
+          - "--mounts-allowed=5000"
+        name: fuse-device-plugin-ctr
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+        volumeMounts:
+          - name: device-plugin
+            mountPath: /var/lib/kubelet/device-plugins
+      volumes:
+        - name: device-plugin
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+      imagePullSecrets:
+        - name: registry-secret
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: multicloud-fs
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: multicloud-fs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:latest
+        ports:
+        - containerPort: 6379
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: multicloud-fs
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+  selector:
+    app: redis
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-1
+  namespace: multicloud-fs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-1
+  template:
+    metadata:
+      labels:
+        app: cloud-1
+    spec:
+      containers:
+      - name: cloud-1
+        image: wprzybytek/multicloud-file-system:latest
+        env:
+        - name: HOST_URL
+          value: cloud-1
+        command: [ "poetry", "run", "python", "/app/src/entrypoint.pyx", "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5000", "-u", "redis://redis:6379" ]
+        ports:
+        - containerPort: 5000
+        securityContext:
+          capabilities:
+            add: ["SYS_ADMIN"]
+        volumeMounts:
+        - mountPath: /dev/fuse
+          name: fuse
+        resources:
+          limits:
+            nextflow.io/fuse: 1
+      volumes:
+      - name: fuse
+        hostPath:
+          path: /dev/fuse
+          type: CharDevice
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-1
+  namespace: multicloud-fs
+spec:
+  ports:
+  - port: 5000
+    targetPort: 5000
+  selector:
+    app: cloud-1
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-2
+  namespace: multicloud-fs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-2
+  template:
+    metadata:
+      labels:
+        app: cloud-2
+    spec:
+      containers:
+      - name: cloud-2
+        image: wprzybytek/multicloud-file-system:latest
+        env:
+        - name: HOST_URL
+          value: cloud-2
+        command: [ "poetry", "run", "python", "/app/src/entrypoint.pyx", "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5001", "-u", "redis://redis:6379" ]
+        ports:
+        - containerPort: 5001
+        securityContext:
+          capabilities:
+            add: ["SYS_ADMIN"]
+        volumeMounts:
+        - mountPath: /dev/fuse
+          name: fuse
+        resources:
+          limits:
+            nextflow.io/fuse: 1
+      volumes:
+      - name: fuse
+        hostPath:
+          path: /dev/fuse
+          type: CharDevice
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-2
+  namespace: multicloud-fs
+spec:
+  ports:
+  - port: 5001
+    targetPort: 5001
+  selector:
+    app: cloud-2
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cloud-network
+  namespace: multicloud-fs
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: cloud-1
+    - podSelector:
+        matchLabels:
+          app: cloud-2
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: cloud-1
+    - podSelector:
+        matchLabels:
+          app: cloud-2
