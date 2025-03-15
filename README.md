@@ -18,7 +18,7 @@ File system (for now mostly a proof of concept) for distributed computing in mul
 ### Docker compose
 
 ```bash
-docker-compose up -d
+  docker compose up -d
 ```
 
 ### Local python
@@ -28,20 +28,37 @@ You will need to have `redis` installed and running.
 Install dependencies:
 
 ```bash
-poetry shell
-poetry install
-```
-
-Set up the environment:
-
-```
-REDIS_URL={url for redis};PORT={port for this fs};ROOT_PATH={path to the root directory}
+  poetry shell
+  poetry install
 ```
 
 Run the file system:
 
 ```bash
-poetry run python src.entrypoint.pyx -d -s -f {mount_point}
+  poetry run python src/main.py -f {mount_point} -r {root_dir} -p {port} -u {redis_url}
+```
+
+### Compiling to cpython executable
+
+You will need to have `redis` installed and running.
+
+Install dependencies:
+
+```bash
+  poetry shell
+  poetry install
+```
+
+Compile cython code:
+
+```bash
+  poetry run python setup.py build_ext --inplace
+```
+
+Compile to cpython executable:
+
+```bash
+  pyinstaller multicloudfs.spec
 ```
 
 ## Architecture

@@ -95,11 +95,11 @@ spec:
     spec:
       containers:
       - name: cloud-1
-        image: wprzybytek/multicloud-file-system:latest
+        image: multicloud-fs:0.1.0
         env:
         - name: HOST_URL
           value: cloud-1
-        command: [ "poetry", "run", "python", "/app/src/entrypoint.pyx", "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5000", "-u", "redis://redis:6379" ]
+        args: [ "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5000", "-u", "redis://redis:6379" ]
         ports:
         - containerPort: 5000
         securityContext:
@@ -110,7 +110,7 @@ spec:
           name: fuse
         resources:
           limits:
-            nextflow.io/fuse: 1
+            nextflow.io/fuse: "1"
       volumes:
       - name: fuse
         hostPath:
@@ -150,11 +150,11 @@ spec:
     spec:
       containers:
       - name: cloud-2
-        image: wprzybytek/multicloud-file-system:latest
+        image: multicloud-fs:0.1.0
         env:
         - name: HOST_URL
           value: cloud-2
-        command: [ "poetry", "run", "python", "/app/src/entrypoint.pyx", "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5001", "-u", "redis://redis:6379" ]
+        args: [ "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5001", "-u", "redis://redis:6379" ]
         ports:
         - containerPort: 5001
         securityContext:
@@ -165,7 +165,7 @@ spec:
           name: fuse
         resources:
           limits:
-            nextflow.io/fuse: 1
+            nextflow.io/fuse: "1"
       volumes:
       - name: fuse
         hostPath:
