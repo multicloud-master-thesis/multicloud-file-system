@@ -99,7 +99,7 @@ spec:
         env:
         - name: HOST_URL
           value: cloud-1
-        args: [ "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5000", "-u", "redis://redis:6379" ]
+        args: [ "-f", "/var/multicloud-fs", "-r", "/shared/multicloud-fs", "-p", "5000", "-u", "redis://redis:6379" ]
         ports:
         - containerPort: 5000
         securityContext:
@@ -154,7 +154,7 @@ spec:
         env:
         - name: HOST_URL
           value: cloud-2
-        args: [ "-f", "/mnt/multicloud-fs", "-r", "/tmp/rootpath", "-p", "5001", "-u", "redis://redis:6379" ]
+        args: [ "-f", "/var/multicloud-fs", "-r", "/shared/multicloud-fs", "-p", "5001", "-u", "redis://redis:6379" ]
         ports:
         - containerPort: 5001
         securityContext:

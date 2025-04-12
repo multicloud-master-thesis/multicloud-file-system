@@ -2,3 +2,5 @@
 **/*.c
 **/*.so
 **/*.o
+build
+dist

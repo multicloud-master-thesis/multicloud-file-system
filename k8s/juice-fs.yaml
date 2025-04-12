@@ -1,0 +1,174 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: juicefs-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:6.2
+          ports:
+            - containerPort: 6379
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: juicefs-system
+spec:
+  ports:
+    - port: 6379
+  selector:
+    app: redis
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: juicefs-local-storage
+  namespace: juicefs-system
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /var/juicefs-storage
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - kind-control-plane  # Replace with your node name
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: juicefs-local-storage-claim
+  namespace: juicefs-system
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: juicefs-secret
+  namespace: juicefs-system
+type: Opaque
+stringData:
+  name: "myjuicefs"
+  metaurl: "redis://redis.juicefs-system.svc.cluster.local:6379/1"
+  storage: "file"
+  bucket: "/var/juicefs-storage"
+
+---
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: juicefs-sc
+provisioner: csi.juicefs.com
+parameters:
+  csi.storage.k8s.io/provisioner-secret-name: juicefs-secret
+  csi.storage.k8s.io/provisioner-secret-namespace: juicefs-system
+  csi.storage.k8s.io/node-publish-secret-name: juicefs-secret
+  csi.storage.k8s.io/node-publish-secret-namespace: juicefs-system
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+mountOptions:
+  - cache-size=1024
+  - writeback
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-juicefs-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: juicefs-sc
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app1
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app1
+  template:
+    metadata:
+      labels:
+        app: app1
+    spec:
+      containers:
+        - name: app1
+          image: nginx:latest
+          volumeMounts:
+            - name: shared-storage
+              mountPath: /data
+          ports:
+            - containerPort: 80
+      volumes:
+        - name: shared-storage
+          persistentVolumeClaim:
+            claimName: shared-juicefs-pvc
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app2
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app2
+  template:
+    metadata:
+      labels:
+        app: app2
+    spec:
+      containers:
+        - name: app2
+          image: debian:bookworm-slim
+          command: [ "sleep", "infinity" ]
+          volumeMounts:
+            - name: shared-storage
+              mountPath: /mnt/shared-data
+      volumes:
+        - name: shared-storage
+          persistentVolumeClaim:
+            claimName: shared-juicefs-pvc

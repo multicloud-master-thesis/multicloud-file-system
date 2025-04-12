@@ -36,7 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create necessary directories
-RUN mkdir -p /mnt/multicloud-fs /tmp/rootpath
+RUN mkdir -p /var/multicloud-fs /shared/multicloud-fs
 
 # Copy the executable from builder stage
 COPY --from=builder /app/dist/multicloud_fs /usr/local/bin/

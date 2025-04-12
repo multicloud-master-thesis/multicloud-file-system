@@ -1,0 +1,47 @@
+# Namespace configuration
+namespace: multicloud-system
+createNamespace: true
+
+# Image configuration
+images:
+  csiPlugin:
+    repository: multicloud-csi-driver
+    tag: 0.1.0
+    pullPolicy: IfNotPresent
+  nodeDriverRegistrar:
+    repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
+    tag: v2.13.0
+    pullPolicy: IfNotPresent
+  redis:
+    repository: redis
+    tag: 7.4.2
+    pullPolicy: IfNotPresent
+  controllerCsiProvisioner:
+    repository: registry.k8s.io/sig-storage/csi-provisioner
+    tag: v5.2.0
+    pullPolicy: IfNotPresent
+  controllerCsiAttacher:
+    repository: registry.k8s.io/sig-storage/csi-attacher
+    tag: v4.8.0
+    pullPolicy: IfNotPresent
+
+# StorageClass configuration
+storageClass:
+  name: multicloud-csi-sc
+
+# Resource limits
+resources:
+  controller:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  node:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi

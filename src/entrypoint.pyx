@@ -26,6 +26,7 @@ def parse_args():
     parser.add_argument(
         "-f", "--mount_path", required=True, help="Mount path for the file system"
     )
+    parser.add_argument("-i", "--host_ip", default="localhost", help="Host of the server")
     parser.add_argument(
         "-u", "--redis_url", required=True, help="URL for the Redis server"
     )
@@ -39,23 +40,19 @@ def parse_args():
     return args
 
 
-def determine_url():
-    return os.getenv("HOST_URL", "localhost")
-
-
 def run():
     args = parse_args()
     threading.Thread(
         target=run_server_process, args=(args.root_path, args.port), daemon=True
     ).start()
     client_manager = GrpcClientManager(
-        redis_url=args.redis_url, url=f"{determine_url()}:{args.port}"
+        redis_url=args.redis_url, url=f"{args.host_ip}:{args.port}"
     )
     server = MultiCloudFS(
         dash_s_do="setsingle", root_path=args.root_path, client=client_manager
     )
     client_manager.initialize_files(server.get_files())
-    fuse_args = ["-f", args.mount_path]
+    fuse_args = ["-f", args.mount_path, "-o", "nonempty"]
     if args.debug:
         fuse_args.append("-d")
     if args.single:
