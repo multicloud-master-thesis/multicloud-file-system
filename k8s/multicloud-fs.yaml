@@ -96,10 +96,7 @@ spec:
       containers:
       - name: cloud-1
         image: multicloud-fs:0.1.0
-        env:
-        - name: HOST_URL
-          value: cloud-1
-        args: [ "-f", "/var/multicloud-fs", "-r", "/shared/multicloud-fs", "-p", "5000", "-u", "redis://redis:6379" ]
+        args: [ "-f", "/var/multicloud-fs", "-r", "/shared/multicloud-fs", "-p", "5000", "-u", "redis://redis:6379", "-i", "cloud-1" ]
         ports:
         - containerPort: 5000
         securityContext:
@@ -151,10 +148,7 @@ spec:
       containers:
       - name: cloud-2
         image: multicloud-fs:0.1.0
-        env:
-        - name: HOST_URL
-          value: cloud-2
-        args: [ "-f", "/var/multicloud-fs", "-r", "/shared/multicloud-fs", "-p", "5001", "-u", "redis://redis:6379" ]
+        args: [ "-f", "/var/multicloud-fs", "-r", "/shared/multicloud-fs", "-p", "5001", "-u", "redis://redis:6379", "-i", "cloud-2" ]
         ports:
         - containerPort: 5001
         securityContext:

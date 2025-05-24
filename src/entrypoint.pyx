@@ -1,12 +1,14 @@
-import threading
 import argparse
-import os
+import platform
+import signal
+import sys
+import threading
 
 import fuse
 
 from file_system import MultiCloudFS
-from grpc_server import serve
 from grpc_client_manager import GrpcClientManager
+from grpc_server import serve
 
 fuse.fuse_python_api = (0, 2)
 
@@ -26,7 +28,9 @@ def parse_args():
     parser.add_argument(
         "-f", "--mount_path", required=True, help="Mount path for the file system"
     )
-    parser.add_argument("-i", "--host_ip", default="localhost", help="Host of the server")
+    parser.add_argument(
+        "-i", "--host_ip", default="localhost", help="Host of the server"
+    )
     parser.add_argument(
         "-u", "--redis_url", required=True, help="URL for the Redis server"
     )
@@ -52,7 +56,18 @@ def run():
         dash_s_do="setsingle", root_path=args.root_path, client=client_manager
     )
     client_manager.initialize_files(server.get_files())
-    fuse_args = ["-f", args.mount_path, "-o", "nonempty"]
+
+    def signal_handler(sig, frame):
+        print("Shutting down, cleaning up resources...")
+        client_manager.remove_manager(server.get_files())
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    fuse_args = ["-f", args.mount_path]
+    if platform.system() != "Darwin":
+        fuse_args += ["-o", "nonempty"]
     if args.debug:
         fuse_args.append("-d")
     if args.single:

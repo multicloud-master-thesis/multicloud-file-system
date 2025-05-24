@@ -1,6 +1,8 @@
+import logging
+
 import csi_pb2
 import csi_pb2_grpc
-import logging
+
 
 class IdentityService(csi_pb2_grpc.IdentityServicer):
     def __init__(self, name, version):
@@ -11,8 +13,7 @@ class IdentityService(csi_pb2_grpc.IdentityServicer):
     def GetPluginInfo(self, request, context):
         logging.info("GetPluginInfo called")
         return csi_pb2.GetPluginInfoResponse(
-            name=self.name,
-            vendor_version=self.version
+            name=self.name, vendor_version=self.version
         )
 
     def GetPluginCapabilities(self, request, context):
@@ -28,7 +29,7 @@ class IdentityService(csi_pb2_grpc.IdentityServicer):
                     volume_expansion=csi_pb2.PluginCapability.VolumeExpansion(
                         type=csi_pb2.PluginCapability.VolumeExpansion.ONLINE
                     )
-                )
+                ),
             ]
         )
 

@@ -2,7 +2,7 @@
 
 ## Description
 
-File system (for now mostly a proof of concept) for distributed computing in multicloud environment.
+File system for distributed computing using local nodes storage.
 
 ## Requirements
 
@@ -14,12 +14,6 @@ File system (for now mostly a proof of concept) for distributed computing in mul
 - Docker installed
 
 ## Local development
-
-### Docker compose
-
-```bash
-  docker compose up -d
-```
 
 ### Local python
 
@@ -35,12 +29,10 @@ Install dependencies:
 Run the file system:
 
 ```bash
-  poetry run python src/main.py -f {mount_point} -r {root_dir} -p {port} -u {redis_url}
+  poetry run python src/main.py -f {mount_point} -r {root_dir} -p {port} -u {redis_url} -i localhost
 ```
 
 ### Compiling to cpython executable
-
-You will need to have `redis` installed and running.
 
 Install dependencies:
 

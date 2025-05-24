@@ -1,5 +1,5 @@
-from redis_client import RedisClient
 from grpc_client import GrpcClient
+from redis_client import RedisClient
 
 
 class GrpcClientManager:
@@ -12,7 +12,7 @@ class GrpcClientManager:
 
     def initialize_files(self, files):
         for file in files:
-            self.create(file)
+            self.set(file)
 
     def remove_manager(self, files):
         self.redis_client.remove_from_hosts(self.url)
@@ -62,8 +62,124 @@ class GrpcClientManager:
 
         return self.clients[client_url].read(path, size, offset)
 
-    def create(self, path):
-        self.redis_client.set(path, self.url)
+    def write(self, path, buf, offset):
+        client_url = self.redis_client.get(path)
+        if not client_url:
+            return None
+        if client_url not in self.clients:
+            self.add_client(client_url)
+
+        return self.clients[client_url].write(path, buf, offset)
+
+    def truncate(self, path, size):
+        client_url = self.redis_client.get(path)
+        if not client_url:
+            return None
+        if client_url not in self.clients:
+            self.add_client(client_url)
+
+        return self.clients[client_url].truncate(path, size)
+
+    def chown(self, path, uid, gid):
+        client_url = self.redis_client.get(path)
+        if not client_url:
+            return None
+        if client_url not in self.clients:
+            self.add_client(client_url)
+
+        return self.clients[client_url].chown(path, uid, gid)
+
+    def chmod(self, path, mode):
+        client_url = self.redis_client.get(path)
+        if not client_url:
+            return None
+        if client_url not in self.clients:
+            self.add_client(client_url)
+
+        return self.clients[client_url].chmod(path, mode)
+
+    def unlink(self, path):
+        client_url = self.redis_client.get(path)
+        if not client_url:
+            return None
+        if client_url not in self.clients:
+            self.add_client(client_url)
+
+        result = self.clients[client_url].unlink(path)
+        if result:
+            self.remove(path)
+        return result
+
+    def rmdir(self, path):
+        client_url = self.redis_client.get(path)
+        if not client_url:
+            return None
+        if client_url not in self.clients:
+            self.add_client(client_url)
+
+        result = self.clients[client_url].rmdir(path)
+        if result:
+            self.remove(path)
+        return result
+
+    def rename(self, old_path, new_path):
+        client_url = self.redis_client.get(old_path)
+        if not client_url:
+            return None
+        if client_url not in self.clients:
+            self.add_client(client_url)
+
+        result = self.clients[client_url].rename(old_path, new_path)
+        if result:
+            self.remove(old_path)
+            self.set(new_path, client_url)
+        return result
+
+    def access(self, path, mode):
+        client_url = self.redis_client.get(path)
+        if not client_url:
+            return None
+        if client_url not in self.clients:
+            self.add_client(client_url)
+
+        return self.clients[client_url].access(path, mode)
+
+    def utimens(self, path, times=None):
+        client_url = self.redis_client.get(path)
+        if not client_url:
+            return None
+        if client_url not in self.clients:
+            self.add_client(client_url)
+
+        return self.clients[client_url].utimens(path, times)
+
+    def mkdir(self, path, parent_path, mode):
+        client_url = self.redis_client.get(parent_path)
+        if not client_url:
+            return None
+        if client_url not in self.clients:
+            self.add_client(client_url)
+
+        result = self.clients[client_url].mkdir(path, mode)
+        if result:
+            self.set(path, client_url)
+        return result
+
+    def create(self, path, parent_path, flags, mode):
+        client_url = self.redis_client.get(parent_path)
+        if not client_url:
+            return None
+        if client_url not in self.clients:
+            self.add_client(client_url)
+
+        result = self.clients[client_url].create(path, flags, mode)
+        if result:
+            self.set(path, client_url)
+        return result
+
+    def set(self, path, address=None):
+        url = address if address else self.url
+        self.redis_client.set(path, url)
 
     def remove(self, path):
         self.redis_client.remove(path)

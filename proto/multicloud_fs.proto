@@ -7,6 +7,17 @@ service Operations {
   rpc GetAttr (GetAttrRequest) returns (GetAttrResponse) {}
   rpc ReadDir (ReadDirRequest) returns (ReadDirResponse) {}
   rpc Read (ReadRequest) returns (ReadResponse) {}
+  rpc Write (WriteRequest) returns (WriteResponse) {}
+  rpc Truncate (TruncateRequest) returns (TruncateResponse) {}
+  rpc Chown (ChownRequest) returns (ChownResponse) {}
+  rpc Chmod (ChmodRequest) returns (ChmodResponse) {}
+  rpc Unlink (UnlinkRequest) returns (UnlinkResponse) {}
+  rpc Rmdir (RmdirRequest) returns (RmdirResponse) {}
+  rpc Rename (RenameRequest) returns (RenameResponse) {}
+  rpc Access (AccessRequest) returns (AccessResponse) {}
+  rpc Utimens (UtimensRequest) returns (UtimensResponse) {}
+  rpc Mkdir (MkdirRequest) returns (MkdirResponse) {}
+  rpc Create (CreateRequest) returns (CreateResponse) {}
 }
 
 message ExistsRequest {
@@ -51,4 +62,108 @@ message ReadRequest {
 
 message ReadResponse {
     bytes data = 1;
+}
+
+message WriteRequest {
+    string path = 1;
+    bytes data = 2;
+    int64 offset = 3;
+}
+
+message WriteResponse {
+    int64 bytes_written = 1;
+}
+
+message TruncateRequest {
+    string path = 1;
+    int64 size = 2;
+}
+
+message TruncateResponse {
+    bool success = 1;
+}
+
+message ChownRequest {
+    string path = 1;
+    int64 uid = 2;
+    int64 gid = 3;
+}
+
+message ChownResponse {
+    bool success = 1;
+}
+
+message ChmodRequest {
+    string path = 1;
+    int64 mode = 2;
+}
+
+message ChmodResponse {
+    bool success = 1;
+}
+
+message UnlinkRequest {
+    string path = 1;
+}
+
+message UnlinkResponse {
+    bool success = 1;
+}
+
+message RmdirRequest {
+    string path = 1;
+}
+
+message RmdirResponse {
+    bool success = 1;
+}
+
+message RenameRequest {
+    string old_path = 1;
+    string new_path = 2;
+}
+
+message RenameResponse {
+    bool success = 1;
+}
+
+message AccessRequest {
+    string path = 1;
+    int32 mode = 2;
+}
+
+message AccessResponse {
+    bool success = 1;
+}
+
+message UtimensRequest {
+    string path = 1;
+    bool has_times = 2;
+    int64 atime_sec = 3;
+    int64 atime_nsec = 4;
+    int64 mtime_sec = 5;
+    int64 mtime_nsec = 6;
+}
+
+message UtimensResponse {
+    bool success = 1;
+}
+
+message MkdirRequest {
+    string path = 1;
+    int64 mode = 2;
+}
+
+message MkdirResponse {
+    bool success = 1;
+}
+
+message CreateRequest {
+    string path = 1;
+    int64 flags = 2;
+    int64 mode = 3;
+}
+
+message CreateResponse {
+    bool success = 1;
 }

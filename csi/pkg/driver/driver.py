@@ -1,9 +1,10 @@
-import grpc
-from concurrent import futures
 import logging
+from concurrent import futures
 
-from .identity import IdentityService
+import grpc
+
 from .controller import ControllerService
+from .identity import IdentityService
 from .node import NodeService
 
 
@@ -16,14 +17,12 @@ class MulticloudCSIDriver:
         self.root_dir = root_dir
         self.node_url = node_url
 
-        # Driver name and version
         self.name = "csi.multicloud.fs"
         self.version = "0.1.0"
 
     def run(self):
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
-        # Register CSI services
         identity_service = IdentityService(self.name, self.version)
         identity_service.register(server)
 
@@ -41,7 +40,7 @@ class MulticloudCSIDriver:
             mount_point=self.mount_point,
             root_dir=self.root_dir,
             redis_url=self.redis_url,
-            node_url=self.node_url
+            node_url=self.node_url,
         )
         node_service.register(server)
 
@@ -50,5 +49,4 @@ class MulticloudCSIDriver:
 
         logging.info(f"CSI driver {self.name} started on {self.endpoint}")
 
-        # Keep the server running
         server.wait_for_termination()
