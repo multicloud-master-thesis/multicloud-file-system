@@ -2,7 +2,6 @@ FROM multicloud-fs:0.1.0 AS provider
 
 FROM debian:bookworm-slim
 
-# Install additional dependencies for the CSI driver
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     python3 \
@@ -17,13 +16,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Create directories for the CSI driver
 WORKDIR /app
 
-# Copy CSI driver code
 COPY . /app/
 
-# Download and build the CSI proto file with the system protobuf
 RUN wget -O /app/csi.proto https://raw.githubusercontent.com/container-storage-interface/spec/master/csi.proto && \
     python3 -m grpc.tools.protoc \
     --proto_path=/app \
@@ -31,10 +27,8 @@ RUN wget -O /app/csi.proto https://raw.githubusercontent.com/container-storage-i
     --grpc_python_out=/app \
     /app/csi.proto
 
-# Make the driver script executable
 RUN chmod +x /app/cmd/driver.py
 
 COPY --from=provider /usr/local/bin/multicloud_fs /usr/local/bin/
 
-# Entry point
 ENTRYPOINT ["python3", "/app/cmd/driver.py"]

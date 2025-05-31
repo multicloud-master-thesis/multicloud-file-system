@@ -35,7 +35,6 @@ def main():
         level=numeric_level, format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
-    # Create directories if they don't exist
     os.makedirs(args.root_dir, exist_ok=True)
     os.makedirs(args.mount_point, exist_ok=True)
 

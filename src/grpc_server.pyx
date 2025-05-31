@@ -184,18 +184,18 @@ class GrpcServer(Operations):
 
 def serve(root_path: str, port: int):
     server_options = [
-        # Increase maximum message size for large file transfers
-        ('grpc.max_send_message_length', 50 * 1024 * 1024),  # 50 MB
-        ('grpc.max_receive_message_length', 50 * 1024 * 1024),  # 50 MB
-        # Server keepalive settings
-        ('grpc.keepalive_time_ms', 20000),  # 20 seconds
-        ('grpc.keepalive_timeout_ms', 10000),  # 10 seconds
-        ('grpc.keepalive_permit_without_calls', True),
-        # Minimum time between pings
-        ('grpc.http2.min_time_between_pings_ms', 10000),  # Minimum 10s between pings
-        # Connection age settings
-        ('grpc.max_connection_age_ms', 300000),  # 5 minutes
-        ('grpc.max_connection_age_grace_ms', 30000),  # 30 seconds
+        ("grpc.max_send_message_length", 50 * 1024 * 1024),
+        ("grpc.max_receive_message_length", 50 * 1024 * 1024),
+        ("grpc.keepalive_time_ms", 20000),
+        ("grpc.keepalive_timeout_ms", 10000),
+        ("grpc.keepalive_permit_without_calls", True),
+        ("grpc.http2.min_time_between_pings_ms", 10000),
+        ("grpc.max_connection_age_ms", 300000),
+        ("grpc.max_connection_age_grace_ms", 30000),
+        (
+            "grpc.http2.max_pings_without_data",
+            0,
+        ),
     ]
     server = grpc.server(
         futures.ThreadPoolExecutor(max_workers=30), options=server_options

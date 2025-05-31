@@ -223,7 +223,7 @@ class MultiCloudFS(fuse.Fuse):
         if os.path.exists(self._full_path(path)):
             try:
                 fd = os.open(self._full_path(path), flags)
-                os.close(fd)  # Close immediately as FUSE manages the handle
+                os.close(fd)
                 return 0
             except PermissionError:
                 return -errno.EACCES
