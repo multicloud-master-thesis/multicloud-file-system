@@ -69,17 +69,47 @@ class MultiCloudFS(fuse.Fuse):
         """Read data from a file."""
         self.logger.debug(f"read: {path}, size: {size}, offset: {offset}")
 
-        if os.path.exists(self._full_path(path)):
-            try:
+        try:
+            if os.path.exists(self._full_path(path)):
                 with open(self._full_path(path), "rb") as f:
                     f.seek(offset)
-                    return f.read(size)
-            except Exception as e:
-                self.logger.error(f"Error reading {path}: {e}")
-                return -errno.EIO
+                    data = f.read(size)
+                    return data
+            else:
+                response = self.client.read(path, size, offset)
+                if response is None:
+                    return -errno.ENOENT
+                return response
+        except IOError as e:
+            self.logger.error(f"IO error reading {path}: {e}")
+            return -errno.EIO
+        except Exception as e:
+            self.logger.error(f"Error reading {path}: {e}")
+            return -errno.EIO
 
-        response = self.client.read(path, size, offset)
-        return response if isinstance(response, bytes) else -errno.ENOENT
+    def write(self, path, buf, offset):
+        """Write data to a file."""
+        self.logger.debug(f"write: {path}, offset: {offset}, size: {len(buf)}")
+
+        try:
+            if os.path.exists(self._full_path(path)):
+                with open(self._full_path(path), "r+b") as f:
+                    f.seek(offset)
+                    bytes_written = f.write(buf)
+                    f.flush()
+                    os.fsync(f.fileno())
+                    return bytes_written
+            else:
+                response = self.client.write(path, buf, offset)
+                if response is None:
+                    return -errno.ENOENT
+                return response
+        except IOError as e:
+            self.logger.error(f"IO error writing to {path}: {e}")
+            return -errno.EIO
+        except Exception as e:
+            self.logger.error(f"Error writing to {path}: {e}")
+            return -errno.EIO
 
     def mkdir(self, path, mode):
         """Create a directory."""
@@ -123,27 +153,6 @@ class MultiCloudFS(fuse.Fuse):
         response = self.client.create(path, parent_path, flags, mode_value)
         return 0 if response else -errno.EACCES
 
-    def write(self, path, buf, offset):
-        """Write data to a file."""
-        self.logger.debug(f"write: {path}, offset: {offset}, size: {len(buf)}")
-
-        if os.path.exists(self._full_path(path)):
-            try:
-                with open(self._full_path(path), "r+b") as f:
-                    f.seek(offset)
-                    return f.write(buf)
-            except IOError as e:
-                error_code = getattr(errno, e.strerror, errno.EIO)
-                return -error_code
-            except Exception as e:
-                self.logger.error(f"Error writing to {path}: {e}")
-                return -errno.EIO
-
-        response = self.client.write(path, buf, offset)
-        if response is None:
-            return -errno.ENOENT
-        return response if response >= 0 else -errno.EIO
-
     def statfs(self):
         """Get filesystem statistics."""
         self.logger.debug("statfs")
@@ -152,7 +161,7 @@ class MultiCloudFS(fuse.Fuse):
             return os.statvfs(self.root_path)
         except Exception as e:
             self.logger.error(f"Error in statfs: {e}")
-            return -errno.EIO
+            return {}
 
     def utime(self, path, times):
         """Set access and modification times of a file."""
@@ -236,11 +245,32 @@ class MultiCloudFS(fuse.Fuse):
     def fsync(self, path, datasync, fh=None):
         """Synchronize file contents."""
         self.logger.debug(f"fsync: {path}, datasync: {datasync}, fh: {fh}")
+
+        if os.path.exists(self._full_path(path)):
+            try:
+                if datasync != 0:
+                    os.fdatasync(fh)
+                else:
+                    os.fsync(fh)
+                return 0
+            except Exception as e:
+                self.logger.error(f"Error syncing {path}: {e}")
+                return -errno.EIO
         return 0
 
     def flush(self, path, fh=None):
         """Flush cached data."""
         self.logger.debug(f"flush: {path}, fh: {fh}")
+
+        if os.path.exists(self._full_path(path)):
+            try:
+                with open(self._full_path(path), "r+b") as f:
+                    f.flush()
+                    os.fsync(f.fileno())
+                return 0
+            except Exception as e:
+                self.logger.error(f"Error flushing {path}: {e}")
+                return -errno.EIO
         return 0
 
     def chmod(self, path, mode):

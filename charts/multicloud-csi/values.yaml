@@ -28,20 +28,3 @@ images:
 # StorageClass configuration
 storageClass:
   name: multicloud-csi-sc
-
-# Resource limits
-resources:
-  controller:
-    limits:
-      cpu: 100m
-      memory: 128Mi
-    requests:
-      cpu: 50m
-      memory: 64Mi
-  node:
-    limits:
-      cpu: 100m
-      memory: 128Mi
-    requests:
-      cpu: 50m
-      memory: 64Mi

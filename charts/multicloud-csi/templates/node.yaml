@@ -14,6 +14,11 @@ spec:
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
+      initContainers:
+        - name: wait-for-redis
+          image: {{ .Values.images.csiPlugin.repository }}:{{ .Values.images.csiPlugin.tag }}
+          imagePullPolicy: {{ .Values.images.csiPlugin.pullPolicy }}
+          command: ['sh', '-c', 'until redis-cli -h multicloud-csi-controller-service.{{ .Values.namespace }} ping; do echo "Waiting for Redis to be ready..."; sleep 2; done; echo "Redis is ready!"']
       containers:
         - name: node-driver-registrar
           image: {{ .Values.images.nodeDriverRegistrar.repository }}:{{ .Values.images.nodeDriverRegistrar.tag }}
@@ -63,6 +68,9 @@ spec:
                   fieldPath: status.hostIP
           securityContext:
             privileged: true
+            capabilities:
+              add: [ "SYS_ADMIN" ]
+            allowPrivilegeEscalation: true
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi

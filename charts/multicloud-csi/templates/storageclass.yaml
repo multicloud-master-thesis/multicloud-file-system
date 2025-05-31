@@ -16,7 +16,8 @@ metadata:
   name: {{ .Values.storageClass.name }}
 provisioner: csi.multicloud.fs
 reclaimPolicy: Delete
-volumeBindingMode: WaitForFirstConsumer
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
 
 ---
 
@@ -26,8 +27,8 @@ metadata:
   name: nfs
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
-      storage: 1Gi
+      storage: 256Mi
   storageClassName: multicloud-csi-sc

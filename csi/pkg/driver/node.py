@@ -1,6 +1,5 @@
 import logging
 import os
-import shutil
 
 import csi_pb2
 import csi_pb2_grpc
@@ -49,9 +48,10 @@ class NodeService(csi_pb2_grpc.NodeServicer):
             f"Publishing volume {volume_id} from {staging_path} to {target_path}"
         )
 
-        os.makedirs(target_path, exist_ok=True)
-
-        self.multicloud_client.mount(volume_path, target_path)
+        mount_success = self.multicloud_client.mount(volume_path, target_path)
+        if not mount_success:
+            error_msg = f"Failed to mount volume {volume_id} at {target_path}"
+            logging.error(error_msg)
 
         return csi_pb2.NodePublishVolumeResponse()
 
@@ -61,7 +61,6 @@ class NodeService(csi_pb2_grpc.NodeServicer):
         logging.info(f"Unpublishing volume {volume_id} from {target_path}")
 
         self.multicloud_client.unmount(target_path)
-        shutil.rmtree(target_path, ignore_errors=True)
 
         return csi_pb2.NodeUnpublishVolumeResponse()
 
@@ -78,7 +77,7 @@ class NodeService(csi_pb2_grpc.NodeServicer):
     def NodeGetInfo(self, request, context):
         return csi_pb2.NodeGetInfoResponse(
             node_id=self.node_id,
-            max_volumes_per_node=100,  # Adjust based on your system capabilities
+            max_volumes_per_node=100,
             accessible_topology=csi_pb2.Topology(
                 segments={"kubernetes.io/hostname": self.node_id}
             ),

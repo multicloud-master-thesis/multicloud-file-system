@@ -34,6 +34,16 @@ spec:
           imagePullPolicy: {{ .Values.images.redis.pullPolicy }}
           ports:
             - containerPort: 6379
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 15
+            periodSeconds: 15
           volumeMounts:
             - name: redis-data
               mountPath: /data
@@ -73,6 +83,8 @@ spec:
             - "--redis-url=redis://localhost:6379"
             - "--node-url=null"
           env:
+            - name: SKIP_NODE_MOUNT
+              value: "true"
             - name: CSI_ENDPOINT
               value: unix:///var/lib/csi/sockets/pluginproxy/csi.sock
             - name: KUBE_NODE_NAME
