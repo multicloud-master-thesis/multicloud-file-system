@@ -184,15 +184,21 @@ class GrpcServer(Operations):
 
 def serve(root_path: str, port: int):
     server_options = [
-        ("grpc.keepalive_time_ms", 10000),
-        ("grpc.keepalive_timeout_ms", 5000),
-        ("grpc.keepalive_permit_without_calls", True),
-        ("grpc.http2.max_pings_without_calls", 0),
-        ("grpc.max_connection_age_ms", 60000),
-        ("grpc.max_connection_age_grace_ms", 10000),
+        # Increase maximum message size for large file transfers
+        ('grpc.max_send_message_length', 50 * 1024 * 1024),  # 50 MB
+        ('grpc.max_receive_message_length', 50 * 1024 * 1024),  # 50 MB
+        # Server keepalive settings
+        ('grpc.keepalive_time_ms', 20000),  # 20 seconds
+        ('grpc.keepalive_timeout_ms', 10000),  # 10 seconds
+        ('grpc.keepalive_permit_without_calls', True),
+        # Minimum time between pings
+        ('grpc.http2.min_time_between_pings_ms', 10000),  # Minimum 10s between pings
+        # Connection age settings
+        ('grpc.max_connection_age_ms', 300000),  # 5 minutes
+        ('grpc.max_connection_age_grace_ms', 30000),  # 30 seconds
     ]
     server = grpc.server(
-        futures.ThreadPoolExecutor(max_workers=10), options=server_options
+        futures.ThreadPoolExecutor(max_workers=30), options=server_options
     )
     add_OperationsServicer_to_server(GrpcServer(root_path), server)
     server.add_insecure_port(f"[::]:{port}")
