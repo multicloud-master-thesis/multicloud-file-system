@@ -26,23 +26,14 @@ from multicloud_fs_pb2_grpc import OperationsStub
 class GrpcClient:
     def __init__(self, address: str, timeout: int = 10):
         options = [
-            ("grpc.max_send_message_length", 50 * 1024 * 1024),  # 50 MB
-            ("grpc.max_receive_message_length", 50 * 1024 * 1024),  # 50 MB
-            (
-                "grpc.keepalive_time_ms",
-                15000,
-            ),
+            ("grpc.max_send_message_length", 50 * 1024 * 1024),
+            ("grpc.max_receive_message_length", 50 * 1024 * 1024),
+            ("grpc.keepalive_time_ms", 20000),
             ("grpc.keepalive_timeout_ms", 10000),
             ("grpc.keepalive_permit_without_calls", True),
-            (
-                "grpc.http2.max_pings_without_data",
-                0,
-            ),
-            ("grpc.min_reconnect_backoff_ms", 1000),
-            (
-                "grpc.max_reconnect_backoff_ms",
-                10000,
-            ),
+            ("grpc.http2.min_time_between_pings_ms", 10000),
+            ("grpc.max_connection_age_ms", 300000),
+            ("grpc.max_connection_age_grace_ms", 30000),
         ]
         self.channel = grpc.insecure_channel(address, options=options)
         self.stub = OperationsStub(self.channel)

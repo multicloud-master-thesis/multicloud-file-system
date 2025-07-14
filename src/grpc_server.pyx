@@ -192,10 +192,6 @@ def serve(root_path: str, port: int):
         ("grpc.http2.min_time_between_pings_ms", 10000),
         ("grpc.max_connection_age_ms", 300000),
         ("grpc.max_connection_age_grace_ms", 30000),
-        (
-            "grpc.http2.max_pings_without_data",
-            0,
-        ),
     ]
     server = grpc.server(
         futures.ThreadPoolExecutor(max_workers=30), options=server_options
