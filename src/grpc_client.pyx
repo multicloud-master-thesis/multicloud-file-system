@@ -86,6 +86,32 @@ class GrpcClient:
             logging.warning("gRPC read method error: %s", e.details())
             return b""
 
+    def read_file_stream(self, path: str, size: int, offset: int):
+        try:
+            stream = self.stub.ReadFile(
+                ReadRequest(path=path, size=size, offset=offset), timeout=self.timeout
+            )
+            for chunk in stream:
+                # chunk has attribute 'content'
+                yield chunk.content
+        except grpc.RpcError as e:
+            logging.warning("gRPC read_file_stream error: %s", e.details())
+            return
+        except Exception as e:
+            logging.warning("gRPC read_file_stream unexpected error: %s", e)
+            return
+
+    def read_file(self, path: str, size: int, offset: int) -> bytes:
+        data_parts = []
+        total = 0
+        for part in self.read_file_stream(path, size, offset):
+            if part:
+                data_parts.append(part)
+                total += len(part)
+        if not data_parts:
+            return b""
+        return b"".join(data_parts)
+
     def write(self, path: str, data: bytes, offset: int) -> int:
         try:
             response = self.stub.Write(

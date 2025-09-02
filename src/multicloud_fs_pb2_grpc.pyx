@@ -62,6 +62,12 @@ class OperationsStub(object):
             response_deserializer=multicloud__fs__pb2.ReadResponse.FromString,
             _registered_method=True,
         )
+        self.ReadFile = channel.unary_stream(
+            "/multi_cloud_fs.Operations/ReadFile",
+            request_serializer=multicloud__fs__pb2.ReadRequest.SerializeToString,
+            response_deserializer=multicloud__fs__pb2.DataChunk.FromString,
+            _registered_method=True,
+        )
         self.Write = channel.unary_unary(
             "/multi_cloud_fs.Operations/Write",
             request_serializer=multicloud__fs__pb2.WriteRequest.SerializeToString,
@@ -157,6 +163,12 @@ class OperationsServicer(object):
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
 
+    def ReadFile(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
+
     def Write(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -245,6 +257,11 @@ def add_OperationsServicer_to_server(servicer, server):
             servicer.Read,
             request_deserializer=multicloud__fs__pb2.ReadRequest.FromString,
             response_serializer=multicloud__fs__pb2.ReadResponse.SerializeToString,
+        ),
+        "ReadFile": grpc.unary_stream_rpc_method_handler(
+            servicer.ReadFile,
+            request_deserializer=multicloud__fs__pb2.ReadRequest.FromString,
+            response_serializer=multicloud__fs__pb2.DataChunk.SerializeToString,
         ),
         "Write": grpc.unary_unary_rpc_method_handler(
             servicer.Write,
@@ -424,6 +441,36 @@ class Operations(object):
             "/multi_cloud_fs.Operations/Read",
             multicloud__fs__pb2.ReadRequest.SerializeToString,
             multicloud__fs__pb2.ReadResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True,
+        )
+
+    @staticmethod
+    def ReadFile(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            "/multi_cloud_fs.Operations/ReadFile",
+            multicloud__fs__pb2.ReadRequest.SerializeToString,
+            multicloud__fs__pb2.DataChunk.FromString,
             options,
             channel_credentials,
             insecure,

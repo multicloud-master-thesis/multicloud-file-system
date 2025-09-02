@@ -7,6 +7,7 @@ service Operations {
   rpc GetAttr (GetAttrRequest) returns (GetAttrResponse) {}
   rpc ReadDir (ReadDirRequest) returns (ReadDirResponse) {}
   rpc Read (ReadRequest) returns (ReadResponse) {}
+  rpc ReadFile (ReadRequest) returns (stream DataChunk) {}
   rpc Write (WriteRequest) returns (WriteResponse) {}
   rpc Truncate (TruncateRequest) returns (TruncateResponse) {}
   rpc Chown (ChownRequest) returns (ChownResponse) {}
@@ -62,6 +63,10 @@ message ReadRequest {
 
 message ReadResponse {
     bytes data = 1;
+}
+
+message DataChunk {
+    bytes content = 1;
 }
 
 message WriteRequest {
