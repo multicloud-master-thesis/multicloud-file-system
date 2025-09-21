@@ -1,0 +1,251 @@
+{
+  "uid": "hyperflow-selective-monitoring",
+  "title": "HyperFlow Selective Performance Monitoring",
+  "tags": [
+    "hyperflow",
+    "io",
+    "cpu",
+    "network"
+  ],
+  "style": "dark",
+  "timezone": "browser",
+  "editable": true,
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 0,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$DS_PROMETHEUS"
+        },
+        "definition": "label_values(node_disk_read_bytes_total, instance)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Nodes",
+        "multi": true,
+        "name": "nodes",
+        "options": [],
+        "query": "label_values(node_disk_read_bytes_total, instance)",
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$DS_PROMETHEUS"
+        },
+        "definition": "label_values(container_cpu_usage_seconds_total{image!=''}, pod)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Pods",
+        "multi": true,
+        "name": "pods",
+        "options": [],
+        "query": "label_values(container_cpu_usage_seconds_total{image!=''}, pod)",
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Disk I/O Throughput per Node",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (instance) (rate(node_disk_read_bytes_total{instance=~\"$nodes\"}[5m]))",
+          "legendFormat": "{{instance}} read"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (instance) (rate(node_disk_written_bytes_total{instance=~\"$nodes\"}[5m]))",
+          "legendFormat": "{{instance}} write"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "CPU Utilization per Pod",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{pod=~\"$pods\", image!=''}[5m]))",
+          "legendFormat": "{{pod}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cores",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Total Data Sent over Cluster Network (Range)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(node_network_transmit_bytes_total{device!~\"lo|veth.*\"}[$__range]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": {
+            "mode": "thresholds"
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "graphMode": "none",
+        "colorMode": "value",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Total Data Received over Cluster Network (Range)",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$DS_PROMETHEUS"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(node_network_receive_bytes_total{device!~\"lo|veth.*\"}[$__range]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": {
+            "mode": "thresholds"
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "graphMode": "none",
+        "colorMode": "value",
+        "justifyMode": "auto",
+        "textMode": "auto"
+      }
+    }
+  ]
+}

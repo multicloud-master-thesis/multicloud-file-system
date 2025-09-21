@@ -5,7 +5,7 @@ createNamespace: true
 # Image configuration
 images:
   csiPlugin:
-    repository: multicloud-csi-driver
+    repository: wprzybytek/multicloud-csi-driver
     tag: 0.1.0
     pullPolicy: IfNotPresent
   nodeDriverRegistrar:
