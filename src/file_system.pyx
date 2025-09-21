@@ -200,7 +200,7 @@ class MultiCloudFS(fuse.Fuse):
         try:
             c = self.cache.get(path, offset, size)
             if c is not None:
-                self._register_cache_location(path)
+                # Do not advertise location based on partial cache slices
                 return c
         except Exception:
             pass
@@ -211,25 +211,53 @@ class MultiCloudFS(fuse.Fuse):
                     if offset:
                         f.seek(offset)
                     data = f.read(size)
-                if offset == 0 and len(data) <= MAX_MEM_CACHE_FILE_SIZE:
-                    try:
-                        self.cache.put(path, data)
+                # Always persist what we read into cache (disk-backed; mem limited inside)
+                try:
+                    if data:
+                        self.cache.put(path, data, offset)
+                        # Safe to register location because file exists locally on disk
                         self._register_cache_location(path)
-                    except Exception:
-                        pass
+                except Exception:
+                    pass
                 return data
         except Exception:
             pass
         # Remote
         try:
-            part = self.client.read(path, size, offset)
-            if part is not None:
-                if offset == 0 and len(part) <= MAX_MEM_CACHE_FILE_SIZE:
+            # Prefer streaming for large reads
+            stream = self.client.read_stream(path, size, offset)
+            if stream is not None:
+                parts = []
+                total = 0
+                cur_off = offset
+                for chunk in stream:
+                    if not chunk:
+                        break
+                    # Respect requested size if provided
+                    part = chunk if size <= 0 else chunk[: max(0, size - total)]
+                    if not part:
+                        break
+                    parts.append(part)
                     try:
-                        self.cache.put(path, part)
-                        self._register_cache_location(path)
+                        self.cache.put(path, part, cur_off)
+                        # Do not register location yet; may be partial
                     except Exception:
                         pass
+                    cur_off += len(part)
+                    total += len(part)
+                    if size > 0 and total >= size:
+                        break
+                if parts:
+                    return b"".join(parts)
+            # Fallback to unary read
+            part = self.client.read(path, size, offset)
+            if part is not None:
+                try:
+                    if part:
+                        self.cache.put(path, part, offset)
+                        # Do not register location on partial cache
+                except Exception:
+                    pass
                 return part
         except Exception:
             pass
@@ -240,13 +268,10 @@ class MultiCloudFS(fuse.Fuse):
         full = self._full_path(path)
         try:
             os.makedirs(os.path.dirname(full), exist_ok=True)
-            mode = (
-                "r+b"
-                if os.path.exists(full) and offset == 0
-                else ("ab" if offset > 0 else "wb")
-            )
+            exists = os.path.exists(full)
+            mode = "r+b" if exists else "wb"
             with open(full, mode) as f:
-                if offset > 0 and mode != "ab":
+                if offset > 0:
                     f.seek(offset)
                 n = f.write(buf)
                 f.flush()
@@ -261,12 +286,14 @@ class MultiCloudFS(fuse.Fuse):
                 self.redis_client.add_location(path, self.client.url)
             except Exception:
                 pass
-            if offset == 0 and len(buf) <= MAX_MEM_CACHE_FILE_SIZE:
-                try:
-                    self.cache.put(path, buf)
+            # Update cache with the exact written range; CacheManager handles memory/disk limits
+            try:
+                if buf:
+                    self.cache.put(path, buf, offset)
+                    # Register cache location because data is persisted locally
                     self._register_cache_location(path)
-                except Exception:
-                    pass
+            except Exception:
+                pass
             self._written_once.add(path)
             try:
                 self.client.write(path, buf, offset)

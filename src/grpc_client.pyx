@@ -26,8 +26,6 @@ from multicloud_fs_pb2_grpc import OperationsStub
 class GrpcClient:
     def __init__(self, address: str, timeout: int = 10):
         options = [
-            ("grpc.max_send_message_length", 50 * 1024 * 1024),  # 50 MB
-            ("grpc.max_receive_message_length", 50 * 1024 * 1024),  # 50 MB
             (
                 "grpc.keepalive_time_ms",
                 15000,

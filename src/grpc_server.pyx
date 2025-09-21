@@ -345,8 +345,6 @@ def serve(
     client_url: str | None = None,
 ):
     server_options = [
-        ("grpc.max_send_message_length", 50 * 1024 * 1024),
-        ("grpc.max_receive_message_length", 50 * 1024 * 1024),
         ("grpc.keepalive_time_ms", 20000),
         ("grpc.keepalive_timeout_ms", 10000),
         ("grpc.keepalive_permit_without_calls", True),

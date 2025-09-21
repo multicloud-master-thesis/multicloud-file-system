@@ -85,6 +85,12 @@ class GrpcClientManager:
             return None
         return self.clients[addr].read(path, size, offset)
 
+    def read_stream(self, path, size, offset):
+        addr = self._random_remote(path)
+        if not addr:
+            return None
+        return self.clients[addr].read_file_stream(path, size, offset)
+
     def write(self, path, buf, offset):
         parent = path.rsplit("/", 1)[0] or "/"
         addr = self._random_remote(parent)
